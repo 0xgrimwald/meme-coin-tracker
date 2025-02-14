@@ -1,4 +1,5 @@
 import React from 'react'
+import CoinList from './components/CoinList'
 
 function App() {
   return (
@@ -9,12 +10,7 @@ function App() {
           <p className="text-gray-400">Track your favorite meme coins in real-time</p>
         </header>
         
-        <div className="bg-gray-800 rounded-lg p-6">
-          <h2 className="text-2xl font-semibold mb-4">Coming Soon...</h2>
-          <p className="text-gray-300">
-            This app will help you track meme coin prices, set alerts, and monitor social sentiment.
-          </p>
-        </div>
+        <CoinList />
       </div>
     </div>
   )
