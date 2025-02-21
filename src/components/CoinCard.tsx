@@ -1,13 +1,14 @@
 import React from 'react';
-import { TrendingUp, TrendingDown } from 'lucide-react';
+import { TrendingUp, TrendingDown, Bell } from 'lucide-react';
 import { Coin } from '../types/coin';
 import { formatPrice, formatMarketCap, formatPercentage } from '../utils/formatters';
 
 interface CoinCardProps {
   coin: Coin;
+  onSetAlert?: (coin: Coin) => void;
 }
 
-const CoinCard: React.FC<CoinCardProps> = ({ coin }) => {
+const CoinCard: React.FC<CoinCardProps> = ({ coin, onSetAlert }) => {
   const isPriceUp = coin.price_change_percentage_24h >= 0;
   
   return (
@@ -28,11 +29,22 @@ const CoinCard: React.FC<CoinCardProps> = ({ coin }) => {
           </div>
         </div>
         
-        <div className={`flex items-center space-x-1 ${isPriceUp ? 'text-green-400' : 'text-red-400'}`}>
-          {isPriceUp ? <TrendingUp size={20} /> : <TrendingDown size={20} />}
-          <span className="font-semibold">
-            {formatPercentage(coin.price_change_percentage_24h)}
-          </span>
+        <div className="flex items-center space-x-2">
+          <div className={`flex items-center space-x-1 ${isPriceUp ? 'text-green-400' : 'text-red-400'}`}>
+            {isPriceUp ? <TrendingUp size={20} /> : <TrendingDown size={20} />}
+            <span className="font-semibold">
+              {formatPercentage(coin.price_change_percentage_24h)}
+            </span>
+          </div>
+          {onSetAlert && (
+            <button
+              onClick={() => onSetAlert(coin)}
+              className="text-gray-400 hover:text-blue-400 transition-colors"
+              title="Set price alert"
+            >
+              <Bell size={18} />
+            </button>
+          )}
         </div>
       </div>
       

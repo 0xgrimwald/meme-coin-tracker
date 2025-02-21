@@ -2,14 +2,23 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Loader2, AlertCircle, RefreshCw } from 'lucide-react';
 import CoinCard from './CoinCard';
 import SearchBar from './SearchBar';
+import PriceAlertModal from './PriceAlertModal';
 import { Coin } from '../types/coin';
+import { AlertFormData } from '../types/alert';
 import { coinGeckoApi } from '../services/coinGeckoApi';
+import { alertManager } from '../utils/alertManager';
 
-const CoinList: React.FC = () => {
+interface CoinListProps {
+  onAlertCreated?: () => void;
+}
+
+const CoinList: React.FC<CoinListProps> = ({ onAlertCreated }) => {
   const [coins, setCoins] = useState<Coin[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCoin, setSelectedCoin] = useState<Coin | null>(null);
+  const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
 
   const loadCoins = async () => {
     try {
@@ -32,6 +41,20 @@ const CoinList: React.FC = () => {
       coin.symbol.toLowerCase().includes(searchQuery.toLowerCase())
     );
   }, [coins, searchQuery]);
+
+  const handleSetAlert = (coin: Coin) => {
+    setSelectedCoin(coin);
+    setIsAlertModalOpen(true);
+  };
+
+  const handleCreateAlert = (alertData: AlertFormData) => {
+    alertManager.createAlert(alertData);
+    setIsAlertModalOpen(false);
+    setSelectedCoin(null);
+    if (onAlertCreated) {
+      onAlertCreated();
+    }
+  };
 
   useEffect(() => {
     loadCoins();
@@ -95,10 +118,20 @@ const CoinList: React.FC = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredCoins.map((coin) => (
-            <CoinCard key={coin.id} coin={coin} />
+            <CoinCard key={coin.id} coin={coin} onSetAlert={handleSetAlert} />
           ))}
         </div>
       )}
+
+      <PriceAlertModal
+        isOpen={isAlertModalOpen}
+        onClose={() => {
+          setIsAlertModalOpen(false);
+          setSelectedCoin(null);
+        }}
+        coin={selectedCoin}
+        onCreateAlert={handleCreateAlert}
+      />
     </div>
   );
 };
