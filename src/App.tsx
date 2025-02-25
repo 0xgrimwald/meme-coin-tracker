@@ -1,12 +1,23 @@
 import React, { useState } from 'react'
 import CoinList from './components/CoinList'
 import AlertsPanel from './components/AlertsPanel'
+import PortfolioPanel from './components/PortfolioPanel'
 
 function App() {
   const [refreshAlerts, setRefreshAlerts] = useState(0);
+  const [refreshPortfolio, setRefreshPortfolio] = useState(0);
+  const [currentPrices, setCurrentPrices] = useState<{ [coinId: string]: number }>({});
 
   const handleAlertCreated = () => {
     setRefreshAlerts(prev => prev + 1);
+  };
+
+  const handleHoldingAdded = () => {
+    setRefreshPortfolio(prev => prev + 1);
+  };
+
+  const handlePricesLoaded = (prices: { [coinId: string]: number }) => {
+    setCurrentPrices(prices);
   };
 
   return (
@@ -17,11 +28,16 @@ function App() {
           <p className="text-gray-400">Track your favorite meme coins in real-time</p>
         </header>
         
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2">
-            <CoinList onAlertCreated={handleAlertCreated} />
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+          <div className="xl:col-span-2">
+            <CoinList 
+              onAlertCreated={handleAlertCreated}
+              onHoldingAdded={handleHoldingAdded}
+              onPricesLoaded={handlePricesLoaded}
+            />
           </div>
-          <div className="lg:col-span-1">
+          <div className="xl:col-span-1 space-y-8">
+            <PortfolioPanel currentPrices={currentPrices} key={refreshPortfolio} />
             <AlertsPanel key={refreshAlerts} />
           </div>
         </div>

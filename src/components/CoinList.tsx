@@ -3,22 +3,27 @@ import { Loader2, AlertCircle, RefreshCw } from 'lucide-react';
 import CoinCard from './CoinCard';
 import SearchBar from './SearchBar';
 import PriceAlertModal from './PriceAlertModal';
+import AddHoldingModal from './AddHoldingModal';
 import { Coin } from '../types/coin';
 import { AlertFormData } from '../types/alert';
 import { coinGeckoApi } from '../services/coinGeckoApi';
 import { alertManager } from '../utils/alertManager';
+import { portfolioManager } from '../utils/portfolioManager';
 
 interface CoinListProps {
   onAlertCreated?: () => void;
+  onHoldingAdded?: () => void;
+  onPricesLoaded?: (prices: { [coinId: string]: number }) => void;
 }
 
-const CoinList: React.FC<CoinListProps> = ({ onAlertCreated }) => {
+const CoinList: React.FC<CoinListProps> = ({ onAlertCreated, onHoldingAdded, onPricesLoaded }) => {
   const [coins, setCoins] = useState<Coin[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCoin, setSelectedCoin] = useState<Coin | null>(null);
   const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
+  const [isHoldingModalOpen, setIsHoldingModalOpen] = useState(false);
 
   const loadCoins = async () => {
     try {
@@ -26,6 +31,16 @@ const CoinList: React.FC<CoinListProps> = ({ onAlertCreated }) => {
       setError(null);
       const coinData = await coinGeckoApi.getMemeCoins();
       setCoins(coinData);
+      
+      // Create prices map and notify parent
+      const pricesMap = coinData.reduce((acc, coin) => {
+        acc[coin.id] = coin.current_price;
+        return acc;
+      }, {} as { [coinId: string]: number });
+      
+      if (onPricesLoaded) {
+        onPricesLoaded(pricesMap);
+      }
     } catch (err) {
       setError('Failed to load coins. Please try again later.');
     } finally {
@@ -53,6 +68,20 @@ const CoinList: React.FC<CoinListProps> = ({ onAlertCreated }) => {
     setSelectedCoin(null);
     if (onAlertCreated) {
       onAlertCreated();
+    }
+  };
+
+  const handleAddToPortfolio = (coin: Coin) => {
+    setSelectedCoin(coin);
+    setIsHoldingModalOpen(true);
+  };
+
+  const handleAddHolding = (coinId: string, coinName: string, coinSymbol: string, amount: number, buyPrice: number) => {
+    portfolioManager.addHolding(coinId, coinName, coinSymbol, amount, buyPrice);
+    setIsHoldingModalOpen(false);
+    setSelectedCoin(null);
+    if (onHoldingAdded) {
+      onHoldingAdded();
     }
   };
 
@@ -118,7 +147,12 @@ const CoinList: React.FC<CoinListProps> = ({ onAlertCreated }) => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredCoins.map((coin) => (
-            <CoinCard key={coin.id} coin={coin} onSetAlert={handleSetAlert} />
+            <CoinCard 
+              key={coin.id} 
+              coin={coin} 
+              onSetAlert={handleSetAlert}
+              onAddToPortfolio={handleAddToPortfolio}
+            />
           ))}
         </div>
       )}
@@ -131,6 +165,16 @@ const CoinList: React.FC<CoinListProps> = ({ onAlertCreated }) => {
         }}
         coin={selectedCoin}
         onCreateAlert={handleCreateAlert}
+      />
+
+      <AddHoldingModal
+        isOpen={isHoldingModalOpen}
+        onClose={() => {
+          setIsHoldingModalOpen(false);
+          setSelectedCoin(null);
+        }}
+        coin={selectedCoin}
+        onAddHolding={handleAddHolding}
       />
     </div>
   );

@@ -1,14 +1,15 @@
 import React from 'react';
-import { TrendingUp, TrendingDown, Bell } from 'lucide-react';
+import { TrendingUp, TrendingDown, Bell, Plus } from 'lucide-react';
 import { Coin } from '../types/coin';
 import { formatPrice, formatMarketCap, formatPercentage } from '../utils/formatters';
 
 interface CoinCardProps {
   coin: Coin;
   onSetAlert?: (coin: Coin) => void;
+  onAddToPortfolio?: (coin: Coin) => void;
 }
 
-const CoinCard: React.FC<CoinCardProps> = ({ coin, onSetAlert }) => {
+const CoinCard: React.FC<CoinCardProps> = ({ coin, onSetAlert, onAddToPortfolio }) => {
   const isPriceUp = coin.price_change_percentage_24h >= 0;
   
   return (
@@ -43,6 +44,15 @@ const CoinCard: React.FC<CoinCardProps> = ({ coin, onSetAlert }) => {
               title="Set price alert"
             >
               <Bell size={18} />
+            </button>
+          )}
+          {onAddToPortfolio && (
+            <button
+              onClick={() => onAddToPortfolio(coin)}
+              className="text-gray-400 hover:text-green-400 transition-colors"
+              title="Add to portfolio"
+            >
+              <Plus size={18} />
             </button>
           )}
         </div>
